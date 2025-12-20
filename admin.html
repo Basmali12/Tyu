@@ -48,16 +48,22 @@
             <button onclick="btnFlip(this); switchTab('cars')" id="tab-cars" class="tab-btn flex-1 py-3 px-4 rounded-xl font-bold">إدارة السيارات</button>
         </div>
 
+        <!-- ✅ التعديل فقط داخل هذا المقطع -->
         <div id="content-accounts" class="glass-card rounded-[2rem] p-8">
             <h2 class="text-center text-sky-800 mb-6 font-bold">إدارة حسابات الزبائن</h2>
             <select id="acc-user-select"><option>اختر المستخدم</option></select>
-            <input type="number" id="acc-amount" placeholder="المبلغ">
+
+            <input type="number" id="acc-amount" placeholder="له (كم بقى له)">
+
+            <input type="number" id="acc-amount2" placeholder="عليه (كم بقى عليه)">
+
             <input type="text" id="acc-desc" placeholder="الوصف">
             <div class="grid grid-cols-2 gap-4">
-                <button class="gold-bg font-bold py-4 rounded-xl">الباقي</button>
-                <button class="red-bg font-bold py-4 rounded-xl">الدفع</button>
+                <button class="gold-bg font-bold py-4 rounded-xl">له</button>
+                <button class="red-bg font-bold py-4 rounded-xl">عليه</button>
             </div>
         </div>
+        <!-- ✅ نهاية التعديل -->
 
         <div id="content-users" class="glass-card rounded-[2rem] p-8 hidden-tab">
             <h2 class="text-center text-sky-800 mb-6 font-bold">إضافة مستخدم جديد</h2>
