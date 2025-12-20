@@ -1,1 +1,121 @@
 
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>إدارة شركة احمد فوزي حسن</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/compressorjs/1.2.1/compressor.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/vanilla-tilt/1.8.1/vanilla-tilt.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <style>
+        body { font-family: 'Cairo', sans-serif; background: #f0f9ff; color: #1e3a8a; }
+        .glass-card { background: white; border: 2px solid #FFD700; box-shadow: 0 10px 25px rgba(0,0,0,0.05); }
+        .tab-btn { color: #64748b; border-bottom: 3px solid transparent; transition: 0.3s; }
+        .tab-active { background-color: #f0f9ff !important; color: #DAA520 !important; border-bottom: 3px solid #DAA520; }
+        input, select, textarea { background: #ffffff !important; border: 1px solid #bae6fd !important; width: 100%; padding: 12px; border-radius: 12px; outline: none; margin-bottom: 10px; }
+        .gold-bg { background: linear-gradient(to right, #FFD700, #DAA520); color: #1e3a8a; }
+        .red-bg { background: #ea0038; color: white; }
+        .hidden-tab { display: none; }
+        .preview-container { position: relative; aspect-ratio: 1/1; border-radius: 10px; border: 1px solid #FFD700; overflow: hidden; }
+        .delete-preview { position: absolute; top: 4px; right: 4px; background: #ea0038; color: white; width: 20px; height: 20px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 10px; cursor: pointer; }
+    </style>
+</head>
+<body class="min-h-screen flex items-center justify-center p-4">
+
+    <div id="login-screen" class="w-full max-w-md glass-card rounded-[2rem] p-8 text-center" data-tilt>
+        <img src="https://f.top4top.io/p_36418598n1.png" class="w-24 h-24 mx-auto mb-4">
+        <h1 class="text-xl font-bold text-sky-800">لوحة تحكم المدير</h1>
+        <p class="text-gold-600 text-xs mb-6">شركة احمد فوزي حسن</p>
+        <input type="text" id="username" placeholder="اسم المستخدم">
+        <input type="password" id="password" placeholder="كلمة المرور">
+        <button onclick="btnFlip(this); login()" class="w-full gold-bg font-bold py-3 rounded-xl mt-4">دخول</button>
+    </div>
+
+    <div id="admin-panel" class="w-full max-w-2xl hidden flex flex-col gap-6 py-4">
+        <div class="flex justify-between items-center px-4 glass-card p-4 rounded-2xl" data-tilt>
+            <h1 class="text-sm font-bold text-sky-900">الإدارة - احمد فوزي حسن</h1>
+            <button onclick="btnFlip(this); logout()" class="text-red-600 font-bold text-sm">خروج</button>
+        </div>
+
+        <div class="bg-white p-1 rounded-2xl flex gap-1 border border-sky-100 overflow-x-auto">
+            <button onclick="btnFlip(this); switchTab('accounts')" id="tab-accounts" class="tab-btn flex-1 py-3 px-4 rounded-xl font-bold tab-active">إدارة الحسابات</button>
+            <button onclick="btnFlip(this); switchTab('users')" id="tab-users" class="tab-btn flex-1 py-3 px-4 rounded-xl font-bold">إدارة المستخدمين</button>
+            <button onclick="btnFlip(this); switchTab('cars')" id="tab-cars" class="tab-btn flex-1 py-3 px-4 rounded-xl font-bold">إدارة السيارات</button>
+        </div>
+
+        <div id="content-accounts" class="glass-card rounded-[2rem] p-8">
+            <h2 class="text-center text-sky-800 mb-6 font-bold">إدارة حسابات الزبائن</h2>
+            <select id="acc-user-select"><option>اختر المستخدم</option></select>
+            <input type="number" id="acc-amount" placeholder="المبلغ">
+            <input type="text" id="acc-desc" placeholder="الوصف">
+            <div class="grid grid-cols-2 gap-4">
+                <button class="gold-bg font-bold py-4 rounded-xl">الباقي</button>
+                <button class="red-bg font-bold py-4 rounded-xl">الدفع</button>
+            </div>
+        </div>
+
+        <div id="content-users" class="glass-card rounded-[2rem] p-8 hidden-tab">
+            <h2 class="text-center text-sky-800 mb-6 font-bold">إضافة مستخدم جديد</h2>
+            <input type="text" id="new-username" placeholder="اسم المستخدم الجديد">
+            <input type="password" id="new-password" placeholder="كلمة المرور">
+            <button onclick="btnFlip(this); saveUser()" class="gold-bg font-bold py-4 rounded-xl w-full">إنشاء الحساب</button>
+        </div>
+
+        <div id="content-cars" class="glass-card rounded-[2rem] p-8 hidden-tab">
+            <h2 class="text-center text-sky-800 mb-6 font-bold">إضافة سيارة جديدة</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-2">
+                <input type="text" id="car-type" placeholder="نوع السيارة"><input type="text" id="car-model" placeholder="موديل السيارة">
+                <input type="text" id="car-chassis" placeholder="رقم الشاصي"><input type="text" id="car-container" placeholder="رقم الحاوية">
+                <input type="text" id="car-lot" placeholder="رقم اللوت"><input type="text" id="car-facade" placeholder="واجهة السيارة">
+                <input type="date" id="car-arrival"><textarea id="car-shipping" placeholder="تفاصيل الشحن" class="md:col-span-2" rows="3"></textarea>
+                <input type="text" id="car-notes" placeholder="ملاحظات" class="md:col-span-2">
+                <select id="car-user-select" class="md:col-span-2"><option>اختيار المستخدم</option></select>
+                <input type="file" id="car-photos" multiple accept="image/*" onchange="handleFileSelect(event)" class="md:col-span-2">
+                <div id="image-previews" class="grid grid-cols-3 gap-3 md:col-span-2"></div>
+            </div>
+            <button id="save-car-btn" onclick="btnFlip(this); saveCarWithPhotos()" class="gold-bg font-bold py-4 rounded-xl w-full mt-4">حفظ وإرسال للزبون</button>
+        </div>
+
+        <div class="glass-card rounded-[2rem] p-6 mb-10 text-center">
+            <h3 id="summary-title" class="font-bold mb-4 text-sky-900">السجلات الحالية</h3>
+            <div id="list-container" class="text-sm text-gray-500 italic">جاري التحميل...</div>
+        </div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-app.js";
+        import { getFirestore, collection, addDoc, deleteDoc, doc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyBYp2NDXCuWUUn6SkYZZUg5gdw7RV8Keps",
+            authDomain: "hbmar11111.firebaseapp.com",
+            projectId: "hbmar11111",
+            storageBucket: "hbmar11111.firebasestorage.app",
+            messagingSenderId: "3682727892",
+            appId: "1:3682727892:web:08a5f8de60a0a71cb3c841"
+        };
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+        let selectedImagesBase64 = [];
+
+        VanillaTilt.init(document.querySelectorAll("[data-tilt]"), { max: 5 });
+        window.btnFlip = (el) => gsap.to(el, { duration: 0.5, rotationY: 360 });
+
+        window.login = () => { if(document.getElementById('username').value === 'ali' && document.getElementById('password').value === '112233') { document.getElementById('login-screen').classList.add('hidden'); document.getElementById('admin-panel').classList.remove('hidden'); document.body.classList.replace('items-center', 'items-start'); loadInitialData(); } };
+        window.switchTab = (tab) => { ['content-accounts', 'content-users', 'content-cars'].forEach(id => document.getElementById(id).classList.add('hidden-tab')); document.getElementById('content-' + tab).classList.remove('hidden-tab'); };
+        window.saveUser = async function() { const name = document.getElementById('new-username').value; const pass = document.getElementById('new-password').value; if(name && pass) { await addDoc(collection(db, "users"), { name, pass }); alert("تم الإنشاء"); } };
+        window.handleFileSelect = async (e) => { const files = e.target.files; for(let f of files) { const compressed = await new Promise(res => new Compressor(f, { quality: 0.2, maxWidth: 600, success(r){res(r)} })); const reader = new FileReader(); reader.onloadend = () => { selectedImagesBase64.push(reader.result); renderPreviews(); }; reader.readAsDataURL(compressed); } };
+        function renderPreviews() { document.getElementById('image-previews').innerHTML = selectedImagesBase64.map((img, i) => `<div class="preview-container"><img src="${img}"><div class="delete-preview" onclick="removePreview(${i})">X</div></div>`).join(''); }
+        window.removePreview = (i) => { selectedImagesBase64.splice(i, 1); renderPreviews(); };
+        window.saveCarWithPhotos = async function() { await addDoc(collection(db, "cars"), { type: document.getElementById('car-type').value, model: document.getElementById('car-model').value, chassis: document.getElementById('car-chassis').value, container: document.getElementById('car-container').value, lot: document.getElementById('car-lot').value, facade: document.getElementById('car-facade').value, arrival: document.getElementById('car-arrival').value, shipping: document.getElementById('car-shipping').value, notes: document.getElementById('car-notes').value, user: document.getElementById('car-user-select').value, imageUrls: selectedImagesBase64 }); alert("تم الحفظ"); location.reload(); };
+        function loadInitialData() { onSnapshot(collection(db, "users"), (snap) => { const selects = [document.getElementById('acc-user-select'), document.getElementById('car-user-select')]; selects.forEach(s => s.innerHTML = '<option>اختر المستخدم</option>'); snap.forEach(doc => { selects.forEach(s => s.innerHTML += `<option value="${doc.data().name}">${doc.data().name}</option>`); }); }); onSnapshot(collection(db, "cars"), (snap) => { const cars = []; snap.forEach(doc => cars.push({id: doc.id, ...doc.data()})); window.allCars = cars; renderList('cars'); }); }
+        function renderList(tab) { document.getElementById('list-container').innerHTML = (window.allCars || []).map(item => `<div class="flex justify-between p-2 border-b"><span>${item.type}</span></div>`).join(''); }
+        window.logout = () => location.reload();
+    </script>
+</body>
+</html>
