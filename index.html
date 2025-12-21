@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
@@ -21,6 +22,12 @@
         input { background: #ffffff !important; border: 1px solid #87CEEB !important; color: #1e3a8a !important; pointer-events: auto !important; }
         .hidden-screen { display: none !important; }
         .logo-img { width: 160px; height: 160px; object-fit: contain; margin: 0 auto; display: block; filter: drop-shadow(0 4px 8px rgba(0,0,0,0.1)); }
+        
+        /* تنسيق جدول الحسابات */
+        .account-table { width: 100%; border-collapse: collapse; font-size: 11px; margin-top: 10px; }
+        .account-table th { background: #1e3a8a; color: white; padding: 8px; border: 1px solid #FFD700; }
+        .account-table td { padding: 8px; border: 1px solid #ddd; text-align: center; background: white; font-weight: bold; }
+        .net-balance-box { background: #22c55e; color: white; padding: 10px; border-radius: 10px; text-align: center; margin-top: 5px; font-weight: bold; }
     </style>
 </head>
 <body class="flex items-center justify-center p-4">
@@ -50,12 +57,40 @@
             </div>
             <button onclick="btnFlip(this); location.reload()" class="bg-white border border-red-200 text-red-600 p-3 rounded-xl shadow-sm"><i class="fas fa-sign-out-alt"></i></button>
         </div>
-        <div id="cars-container" class="space-y-8"></div>
+
+        <div class="glass-card rounded-[2rem] p-5">
+            <h3 class="font-bold gold-text mb-3 text-center border-b pb-2"><i class="fas fa-file-invoice-dollar ml-2"></i>كشف حسابك المالي</h3>
+            <div class="overflow-x-auto">
+                <table class="account-table">
+                    <thead>
+                        <tr>
+                            <th>التاريخ</th>
+                            <th>التفاصيل</th>
+                            <th>عليه</th>
+                            <th>له</th>
+                            <th>الرصيد</th>
+                        </tr>
+                    </thead>
+                    <tbody id="user-statement-body"></tbody>
+                </table>
+            </div>
+            <div id="user-net-balance" class="net-balance-box">جاري حساب الرصيد...</div>
+        </div>
+
+        <h3 class="font-bold text-white text-center text-lg mt-4"><i class="fas fa-car ml-2"></i>سياراتك في الشركة</h3>
+        <div id="cars-container" class="grid grid-cols-2 md:grid-cols-3 gap-4"></div>
+    </div>
+
+    <div id="car-details-modal" class="fixed inset-0 bg-black/80 z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white w-full max-w-2xl max-h-[90vh] overflow-y-auto rounded-[2.5rem] p-6 relative">
+            <button onclick="closeCarDetails()" class="absolute top-4 left-4 bg-red-600 text-white w-10 h-10 rounded-full z-10"><i class="fas fa-times"></i></button>
+            <div id="modal-content"></div>
+        </div>
     </div>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-app.js";
-        import { getFirestore, collection, getDocs, query, where } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore.js";
+        import { getFirestore, collection, getDocs, query, where, onSnapshot } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyBYp2NDXCuWUUn6SkYZZUg5gdw7RV8Keps",
@@ -74,52 +109,106 @@
         window.attemptUserLogin = async function() {
             const userIn = document.getElementById('user-username').value;
             const passIn = document.getElementById('user-password').value;
-            if (userIn === 'ali' && passIn === '112233') { proceed(userIn); }
-            else {
-                const q = query(collection(db, "users"), where("name", "==", userIn), where("pass", "==", passIn));
-                const snap = await getDocs(q);
-                if (!snap.empty) proceed(userIn);
-                else document.getElementById('user-login-error').classList.remove('hidden');
-            }
+            const q = query(collection(db, "users"), where("name", "==", userIn), where("pass", "==", passIn));
+            const snap = await getDocs(q);
+            if (!snap.empty) proceed(userIn);
+            else document.getElementById('user-login-error').classList.remove('hidden');
         };
 
         function proceed(name) {
             document.getElementById('user-login-screen').classList.add('hidden-screen');
             document.getElementById('user-dashboard').classList.remove('hidden-screen');
             document.getElementById('display-user-name').innerText = name;
+            loadAccount(name);
             loadCars(name);
         }
 
+        // تحميل كشف الحساب (للعرض فقط)
+        function loadAccount(userName) {
+            const q = query(collection(db, "accounts"), where("user", "==", userName));
+            onSnapshot(q, (snap) => {
+                const tbody = document.getElementById('user-statement-body');
+                tbody.innerHTML = "";
+                let tFor = 0, tAgainst = 0, balance = 0;
+                let docs = [];
+                snap.forEach(d => docs.push(d.data()));
+                docs.sort((a,b) => a.timestamp - b.timestamp);
+                docs.forEach(item => {
+                    tFor += item.for; tAgainst += item.against; balance = tFor - tAgainst;
+                    tbody.innerHTML += `<tr><td>${item.date}</td><td>${item.desc}</td><td class="text-red-600">${item.against}</td><td class="text-green-600">${item.for}</td><td>${balance}</td></tr>`;
+                });
+                document.getElementById('user-net-balance').innerText = "الرصيد الإجمالي الحالي: " + balance.toLocaleString() + " د.ع";
+            });
+        }
+
+        // تحميل السيارات (كروت مختصرة)
         async function loadCars(userName) {
             const container = document.getElementById('cars-container');
             container.innerHTML = '';
             const q = query(collection(db, "cars"), where("user", "==", userName));
             const snap = await getDocs(q);
-            if (snap.empty) { container.innerHTML = '<div class="glass-card p-10 text-center rounded-3xl font-bold">لا توجد بيانات مسجلة.</div>'; return; }
-            snap.forEach(doc => {
-                const car = doc.data();
-                const carDiv = document.createElement('div');
-                carDiv.className = 'glass-card rounded-[2.5rem] overflow-hidden p-6 mb-4';
-                carDiv.setAttribute('data-tilt', '');
-                let imagesHtml = car.imageUrls ? `<div class="grid grid-cols-3 gap-2 mt-6">${car.imageUrls.map(url => `<div class="img-container"><img src="${url}" onclick="window.open('${url}', '_blank')"></div>`).join('')}</div>` : '';
-                carDiv.innerHTML = `
-                    <div class="flex justify-between items-center mb-6"><h2 class="text-2xl font-bold gold-text">${car.type || 'سيارة'}</h2><span class="bg-sky-100 text-sky-800 px-4 py-1 rounded-full text-xs font-bold border border-sky-200">${car.model || '---'}</span></div>
-                    <div class="grid grid-cols-2 gap-3 car-info-grid text-[11px]">
-                        <div><span class="text-sky-600 block">رقم الشاصي</span><b>${car.chassis || '---'}</b></div>
-                        <div><span class="text-sky-600 block">رقم الحاوية</span><b>${car.container || '---'}</b></div>
-                        <div><span class="text-sky-600 block">رقم اللوت</span><b>${car.lot || '---'}</b></div>
-                        <div><span class="text-sky-600 block">واجهة السيارة</span><b>${car.facade || '---'}</b></div>
-                        <div><span class="text-sky-600 block">تاريخ الوصول</span><b>${car.arrival || '---'}</b></div>
-                        <div><span class="text-sky-600 block">موديل السيارة</span><b>${car.model || '---'}</b></div>
-                    </div>
-                    <div class="mt-4 p-4 bg-white rounded-2xl border border-sky-100"><p class="text-[10px] text-gold-600 font-bold mb-1">تفاصيل الشحن:</p><p class="text-xs text-sky-900 leading-relaxed">${car.shipping || 'لا تتوفر تفاصيل'}</p></div>
-                    ${car.notes ? `<div class="mt-4 p-3 bg-red-50 rounded-xl border border-red-100"><p class="text-[10px] text-red-600 font-bold mb-1">ملاحظات:</p><p class="text-xs text-red-800 italic">${car.notes}</p></div>` : ''}
-                    ${imagesHtml}
+            
+            snap.forEach(docSnap => {
+                const car = docSnap.data();
+                const carId = docSnap.id;
+                // اختيار صورة عشوائية للغلاف
+                const randomImg = car.imageUrls && car.imageUrls.length > 0 
+                    ? car.imageUrls[Math.floor(Math.random() * car.imageUrls.length)] 
+                    : 'https://via.placeholder.com/150?text=No+Image';
+
+                const card = document.createElement('div');
+                card.className = 'glass-card p-3 rounded-3xl text-center cursor-pointer hover:scale-105 transition-transform';
+                card.innerHTML = `
+                    <div class="img-container mb-2"><img src="${randomImg}"></div>
+                    <div class="font-bold gold-text text-xs">${car.carName || car.type || 'سيارة'}</div>
+                    <div class="text-[10px] text-sky-700">${car.model || '---'}</div>
                 `;
-                container.appendChild(carDiv);
-                VanillaTilt.init(carDiv, { max: 3, speed: 400 });
+                card.onclick = () => showCarDetails(car);
+                container.appendChild(card);
             });
         }
+
+        // عرض تفاصيل السيارة المختارة في نافذة منبثقة
+        window.showCarDetails = (car) => {
+            const modal = document.getElementById('car-details-modal');
+            const content = document.getElementById('modal-content');
+            
+            let imagesHtml = car.imageUrls ? `<div class="grid grid-cols-3 gap-2 mt-6">${car.imageUrls.map(url => `<div class="img-container"><img src="${url}" onclick="window.open('${url}', '_blank')"></div>`).join('')}</div>` : '';
+            
+            content.innerHTML = `
+                <h2 class="text-2xl font-bold gold-text mb-4 text-center">${car.carName || car.type}</h2>
+                <div class="grid grid-cols-2 gap-3 car-info-grid text-[11px]">
+                    <div><span class="text-sky-600 block">رقم الشاصي</span><b>${car.chassis || '---'}</b></div>
+                    <div><span class="text-sky-600 block">رقم الحاوية</span><b>${car.container || '---'}</b></div>
+                    <div><span class="text-sky-600 block">رقم اللوت</span><b>${car.lot || '---'}</b></div>
+                    <div><span class="text-sky-600 block">واجهة السيارة</span><b>${car.facade || '---'}</b></div>
+                    <div><span class="text-sky-600 block">تاريخ الوصول</span><b>${car.arrival || '---'}</b></div>
+                    <div><span class="text-sky-600 block">الموديل</span><b>${car.model || '---'}</b></div>
+                </div>
+                <div class="mt-4 p-3 bg-blue-50 rounded-xl"><p class="text-[10px] gold-text font-bold">تفاصيل الشحن:</p><p class="text-xs text-sky-900">${car.shipping || 'لا تتوفر تفاصيل'}</p></div>
+                ${imagesHtml}
+                <button onclick='downloadImages(${JSON.stringify(car.imageUrls)}, "${car.carName}")' class="w-full btn-gold font-bold py-3 rounded-2xl mt-6 shadow-md"><i class="fas fa-download ml-2"></i>تحميل جميع الصور</button>
+            `;
+            modal.classList.remove('hidden');
+        };
+
+        window.closeCarDetails = () => {
+            document.getElementById('car-details-modal').classList.add('hidden');
+        };
+
+        // وظيفة تحميل جميع الصور
+        window.downloadImages = (urls, name) => {
+            if(!urls || urls.length === 0) return alert("لا توجد صور للتحميل");
+            urls.forEach((url, index) => {
+                const link = document.createElement('a');
+                link.href = url;
+                link.download = `${name || 'car'}_image_${index + 1}.jpg`;
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+            });
+            alert("بدأ تحميل الصور...");
+        };
     </script>
 </body>
 </html>
