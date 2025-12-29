@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
@@ -27,28 +26,22 @@
         .account-table { width: 100%; border-collapse: collapse; margin-top: 15px; font-size: 13px; }
         .account-table th { background: #1e3a8a; color: white; padding: 10px; border: 1px solid #ddd; }
         .account-table td { padding: 8px; border: 1px solid #ddd; text-align: center; font-weight: bold; }
-        .row-for { color: #16a34a; }
-        .row-against { color: #dc2626; }
         .total-row { background: #f8fafc; color: #1e3a8a; }
         .final-balance { background: #22c55e !important; color: white !important; }
     </style>
 </head>
-<body class="min-h-screen flex items-center justify-center p-4">
+<body class="min-h-screen flex items-start justify-center p-4">
 
-    <div id="login-screen" class="w-full max-w-md glass-card rounded-[2rem] p-8 text-center" data-tilt>
-        <img src="https://f.top4top.io/p_36418598n1.png" class="w-24 h-24 mx-auto mb-4">
-        <h1 class="text-xl font-bold text-sky-800">لوحة تحكم المدير</h1>
-        <p class="text-gold-600 text-xs mb-6">شركة احمد فوزي حسن</p>
-        <input type="text" id="username" placeholder="اسم المستخدم">
-        <input type="password" id="password" placeholder="كلمة المرور">
-        <button onclick="btnFlip(this); login()" class="w-full gold-bg font-bold py-3 rounded-xl mt-4">دخول</button>
-    </div>
-
-    <div id="admin-panel" class="w-full max-w-2xl hidden flex flex-col gap-6 py-4">
+    <div id="admin-panel" class="w-full max-w-2xl flex flex-col gap-6 py-4">
         <div class="flex justify-between items-center px-4 glass-card p-4 rounded-2xl" data-tilt>
-            <h1 class="text-sm font-bold text-sky-900">الإدارة - احمد فوزي حسن</h1>
-            <button onclick="btnFlip(this); logout()" class="text-red-600 font-bold text-sm">خروج</button>
-        </div>
+            <div class="flex items-center gap-4">
+                <img src="https://f.top4top.io/p_36418598n1.png" class="w-12 h-12">
+                <div>
+                    <h1 class="text-sm font-bold text-sky-900">الإدارة - احمد فوزي حسن</h1>
+                    <span class="text-xs text-green-600 font-bold">● متصل (تخزين محلي)</span>
+                </div>
+            </div>
+            </div>
 
         <div class="bg-white p-1 rounded-2xl flex gap-1 border border-sky-100 overflow-x-auto">
             <button onclick="btnFlip(this); switchTab('accounts')" id="tab-accounts" class="tab-btn flex-1 py-3 px-4 rounded-xl font-bold tab-active">إدارة الحسابات</button>
@@ -60,7 +53,7 @@
             <h2 class="text-center text-sky-800 mb-6 font-bold text-lg">كشف حساب المستخدم</h2>
             
             <div class="bg-blue-50 p-4 rounded-2xl mb-6 border border-blue-100">
-                <select id="acc-user-select" class="mb-2"><option value="">اختر المستخدم لعرض كشفه</option></select>
+                <select id="acc-user-select" class="mb-2" onchange="fetchAccountStatement()"><option value="">اختر المستخدم لعرض كشفه</option></select>
                 <input type="text" id="acc-desc" placeholder="التفاصيل (مثلاً: واصل كاش، تصميم موقع...)">
                 <div class="grid grid-cols-2 gap-3">
                     <input type="number" id="acc-for" placeholder="له (المبلغ الواصل)">
@@ -101,14 +94,19 @@
         <div id="content-users" class="glass-card rounded-[2rem] p-8 hidden-tab">
             <h2 class="text-center text-sky-800 mb-6 font-bold">إضافة مستخدم جديد</h2>
             <input type="text" id="new-username" placeholder="اسم المستخدم الجديد">
-            <input type="password" id="new-password" placeholder="كلمة المرور">
+            <input type="password" id="new-password" placeholder="كلمة المرور (اختياري)">
             <button onclick="btnFlip(this); saveUser()" class="gold-bg font-bold py-4 rounded-xl w-full">إنشاء الحساب</button>
+            
+            <div class="mt-6 border-t pt-4">
+                <h3 class="font-bold text-sm mb-2">المستخدمون الحاليون:</h3>
+                <div id="users-list-display" class="grid grid-cols-2 gap-2 text-xs"></div>
+            </div>
         </div>
 
         <div id="content-cars" class="glass-card rounded-[2rem] p-8 hidden-tab">
             <h2 class="text-center text-sky-800 mb-6 font-bold">إدارة سيارات المستخدم</h2>
             <div class="grid grid-cols-1 md:grid-cols-2 gap-2">
-                <select id="car-user-select" class="md:col-span-2"><option value="">اختيار المستخدم</option></select>
+                <select id="car-user-select" class="md:col-span-2" onchange="renderUserCarsGrid(this.value)"><option value="">اختيار المستخدم</option></select>
                 <button onclick="btnFlip(this); openAddCarMode()" class="gold-bg font-bold py-3 rounded-xl md:col-span-2">+ إضافة سيارة جديدة لهذا المستخدم</button>
                 <div class="md:col-span-2 mt-2">
                     <div class="font-bold text-sky-900 mb-2">سيارات المستخدم</div>
@@ -139,181 +137,339 @@
                     <button id="save-car-btn" onclick="btnFlip(this); saveCarWithPhotos()" class="gold-bg font-bold py-3 rounded-xl md:col-span-2">حفظ</button>
                     <button id="delete-car-btn" onclick="btnFlip(this); deleteCurrentCar()" class="red-bg font-bold py-3 rounded-xl hidden">حذف السيارة</button>
                 </div>
-                <button id="download-all-btn" onclick="btnFlip(this); downloadAllCarImages()" class="mt-3 w-full border border-yellow-300 bg-white font-bold py-3 rounded-xl hidden">تحميل الصور دفعة واحدة</button>
             </div>
         </div>
 
         <div class="glass-card rounded-[2rem] p-6 mb-10 text-center">
-            <h3 id="summary-title" class="font-bold mb-4 text-sky-900">السجلات الحالية</h3>
-            <div id="list-container" class="text-sm text-gray-500 italic">جاري التحميل...</div>
+            <h3 id="summary-title" class="font-bold mb-4 text-sky-900">معلومات التخزين</h3>
+            <div class="text-sm text-gray-500">يتم حفظ البيانات تلقائياً على هذا الجهاز.</div>
+            <button onclick="resetAllData()" class="mt-2 text-xs text-red-400 underline">حذف جميع البيانات (تهيئة)</button>
         </div>
     </div>
 
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-app.js";
-        import { getFirestore, collection, addDoc, deleteDoc, doc, onSnapshot, updateDoc, query, where, getDocs, orderBy } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore.js";
-
-        const firebaseConfig = {
-            apiKey: "AIzaSyBYp2NDXCuWUUn6SkYZZUg5gdw7RV8Keps",
-            authDomain: "hbmar11111.firebaseapp.com",
-            projectId: "hbmar11111",
-            storageBucket: "hbmar11111.firebasestorage.app",
-            messagingSenderId: "3682727892",
-            appId: "1:3682727892:web:08a5f8de60a0a71cb3c841"
-        };
-        const app = initializeApp(firebaseConfig);
-        const db = getFirestore(app);
-
+    <script>
+        // --- تهيئة المكتبات والإعدادات ---
         let selectedImagesBase64 = [];
-        window.allCars = [];
         window.editingCarId = null;
-        let activeAccountListener = null;
-
         VanillaTilt.init(document.querySelectorAll("[data-tilt]"), { max: 5 });
         window.btnFlip = (el) => gsap.to(el, { duration: 0.5, rotationY: 360 });
 
-        window.login = () => {
-            const u = document.getElementById('username').value;
-            const p = document.getElementById('password').value;
-            if(u === 'bilal' && p === '198912') {
-                localStorage.setItem("ADMIN_LOGGED_IN", "1");
-                showAdminPanel();
-                loadInitialData();
-            } else { alert("بيانات الدخول غير صحيحة"); }
+        // --- دوال التعامل مع التخزين المحلي (LocalStorage) ---
+        const DB_KEYS = {
+            USERS: 'afh_users',
+            ACCOUNTS: 'afh_accounts',
+            CARS: 'afh_cars'
         };
 
-        window.logout = () => { localStorage.removeItem("ADMIN_LOGGED_IN"); location.reload(); };
-
-        function showAdminPanel() {
-            document.getElementById('login-screen').classList.add('hidden');
-            document.getElementById('admin-panel').classList.remove('hidden');
-            document.body.classList.replace('items-center', 'items-start');
+        function getDB(key) {
+            const data = localStorage.getItem(key);
+            return data ? JSON.parse(data) : [];
         }
 
-        if (localStorage.getItem("ADMIN_LOGGED_IN") === "1") { showAdminPanel(); loadInitialData(); }
+        function setDB(key, data) {
+            localStorage.setItem(key, JSON.stringify(data));
+        }
 
+        // --- التنقل بين التبويبات ---
         window.switchTab = (tab) => {
             ['content-accounts', 'content-users', 'content-cars'].forEach(id => document.getElementById(id).classList.add('hidden-tab'));
             document.getElementById('content-' + tab).classList.remove('hidden-tab');
             ['accounts','users','cars'].forEach(t => document.getElementById('tab-' + t).classList.remove('tab-active'));
             document.getElementById('tab-' + tab).classList.add('tab-active');
-            if(tab === "cars") renderList('cars');
+            if(tab === 'users') renderUsersList();
         };
 
-        window.saveUser = async function() {
+        // --- تحميل البيانات الأولية ---
+        function loadInitialData() {
+            populateUserDropdowns();
+            renderUsersList();
+        }
+
+        function populateUserDropdowns() {
+            const users = getDB(DB_KEYS.USERS);
+            const carS = document.getElementById('car-user-select');
+            const accS = document.getElementById('acc-user-select');
+            
+            // حفظ القيمة المختارة حالياً
+            const carVal = carS.value;
+            const accVal = accS.value;
+
+            carS.innerHTML = '<option value="">اختيار المستخدم</option>';
+            accS.innerHTML = '<option value="">اختر المستخدم</option>';
+            
+            users.forEach(u => {
+                carS.innerHTML += `<option value="${u.name}">${u.name}</option>`;
+                accS.innerHTML += `<option value="${u.name}">${u.name}</option>`;
+            });
+
+            // استعادة القيمة
+            if(carVal) carS.value = carVal;
+            if(accVal) accS.value = accVal;
+        }
+
+        // --- إدارة المستخدمين ---
+        window.saveUser = function() {
             const name = document.getElementById('new-username').value;
             const pass = document.getElementById('new-password').value;
-            if(name && pass) { await addDoc(collection(db, "users"), { name, pass }); alert("تم الإنشاء"); }
+            if(name) {
+                const users = getDB(DB_KEYS.USERS);
+                if(users.find(u => u.name === name)) {
+                    alert("المستخدم موجود مسبقاً");
+                    return;
+                }
+                users.push({ name, pass, id: Date.now() });
+                setDB(DB_KEYS.USERS, users);
+                
+                document.getElementById('new-username').value = "";
+                document.getElementById('new-password').value = "";
+                populateUserDropdowns();
+                renderUsersList();
+                alert("تم إضافة المستخدم");
+            } else {
+                alert("يرجى كتابة الاسم");
+            }
         };
 
-        window.addTransaction = async function() {
+        function renderUsersList() {
+            const users = getDB(DB_KEYS.USERS);
+            const container = document.getElementById('users-list-display');
+            container.innerHTML = users.length ? users.map(u => 
+                `<div class="bg-sky-50 p-2 rounded border border-sky-100 flex justify-between">
+                    <span>${u.name}</span>
+                    <button onclick="deleteUser(${u.id})" class="text-red-500 font-bold">X</button>
+                 </div>`
+            ).join('') : '<span class="text-gray-400 col-span-2">لا يوجد مستخدمين</span>';
+        }
+
+        window.deleteUser = (id) => {
+            if(confirm("حذف المستخدم؟")) {
+                let users = getDB(DB_KEYS.USERS);
+                users = users.filter(u => u.id !== id);
+                setDB(DB_KEYS.USERS, users);
+                populateUserDropdowns();
+                renderUsersList();
+            }
+        };
+
+        // --- إدارة الحسابات ---
+        window.addTransaction = function() {
             const user = document.getElementById('acc-user-select').value;
             const desc = document.getElementById('acc-desc').value;
             const forAmt = parseFloat(document.getElementById('acc-for').value) || 0;
             const againstAmt = parseFloat(document.getElementById('acc-against').value) || 0;
+            
             if(!user || !desc) return alert("اختر المستخدم واكتب التفاصيل");
             
-            await addDoc(collection(db, "accounts"), {
+            const accounts = getDB(DB_KEYS.ACCOUNTS);
+            accounts.push({
+                id: Date.now(),
                 user, desc, for: forAmt, against: againstAmt,
                 date: new Date().toISOString().split('T')[0],
                 timestamp: Date.now()
             });
+            setDB(DB_KEYS.ACCOUNTS, accounts);
+
             document.getElementById('acc-desc').value = "";
             document.getElementById('acc-for').value = "";
             document.getElementById('acc-against').value = "";
+            
+            fetchAccountStatement();
         };
 
-        function fetchAccountStatement(user) {
-            if (activeAccountListener) activeAccountListener();
-            const q = query(collection(db, "accounts"), where("user", "==", user));
-            activeAccountListener = onSnapshot(q, (snap) => {
-                const tbody = document.getElementById('statement-body');
-                tbody.innerHTML = "";
-                let tFor = 0, tAgainst = 0, balance = 0;
-                let docs = [];
-                snap.forEach(d => docs.push(d.data()));
-                docs.sort((a,b) => a.timestamp - b.timestamp);
-                docs.forEach(item => {
-                    tFor += item.for; tAgainst += item.against; balance = tFor - tAgainst;
-                    tbody.innerHTML += `<tr><td>${item.date}</td><td>${item.desc}</td><td class="text-red-600">${item.against}</td><td class="text-green-600">${item.for}</td><td>${balance}</td></tr>`;
-                });
-                document.getElementById('total-for').innerText = tFor;
-                document.getElementById('total-against').innerText = tAgainst;
-                document.getElementById('net-balance').innerText = balance + " د.ع";
-            });
-        }
-
-        window.clearUserAccount = async function() {
+        window.fetchAccountStatement = function() {
             const user = document.getElementById('acc-user-select').value;
-            if(!user || !confirm("حذف السجل؟")) return;
-            const q = query(collection(db, "accounts"), where("user", "==", user));
-            const snap = await getDocs(q);
-            snap.forEach(async (d) => await deleteDoc(doc(db, "accounts", d.id)));
+            const tbody = document.getElementById('statement-body');
+            tbody.innerHTML = "";
+            
+            if(!user) {
+                document.getElementById('total-for').innerText = 0;
+                document.getElementById('total-against').innerText = 0;
+                document.getElementById('net-balance').innerText = 0;
+                return;
+            }
+
+            const allAccounts = getDB(DB_KEYS.ACCOUNTS);
+            const userAccounts = allAccounts.filter(a => a.user === user).sort((a,b) => a.timestamp - b.timestamp);
+
+            let tFor = 0, tAgainst = 0, balance = 0;
+            
+            userAccounts.forEach(item => {
+                tFor += item.for; 
+                tAgainst += item.against; 
+                balance = tFor - tAgainst;
+                tbody.innerHTML += `<tr><td>${item.date}</td><td>${item.desc}</td><td class="text-red-600">${item.against}</td><td class="text-green-600">${item.for}</td><td>${balance}</td></tr>`;
+            });
+
+            document.getElementById('total-for').innerText = tFor;
+            document.getElementById('total-against').innerText = tAgainst;
+            document.getElementById('net-balance').innerText = balance + " د.ع";
         };
 
+        window.clearUserAccount = function() {
+            const user = document.getElementById('acc-user-select').value;
+            if(!user || !confirm("هل أنت متأكد من حذف سجل حسابات هذا المستخدم؟ لا يمكن التراجع.")) return;
+            
+            let accounts = getDB(DB_KEYS.ACCOUNTS);
+            accounts = accounts.filter(a => a.user !== user); // إبقاء حسابات المستخدمين الآخرين فقط
+            setDB(DB_KEYS.ACCOUNTS, accounts);
+            
+            fetchAccountStatement();
+        };
+
+        // --- إدارة السيارات ---
         window.handleFileSelect = async (e) => {
+            // ملاحظة:LocalStorage لديه مساحة محدودة (حوالي 5-10MB).
+            // نستخدم Compressor لضغط الصور بشدة.
             for(let f of e.target.files) {
-                const compressed = await new Promise(res => new Compressor(f, { quality: 0.2, maxWidth: 600, success(r){res(r)} }));
-                const reader = new FileReader();
-                reader.onloadend = () => { selectedImagesBase64.push(reader.result); renderPreviews(); };
-                reader.readAsDataURL(compressed);
+                try {
+                    const compressed = await new Promise((resolve, reject) => {
+                        new Compressor(f, { 
+                            quality: 0.2, 
+                            maxWidth: 500, 
+                            success(r){ resolve(r); },
+                            error(err){ reject(err); }
+                        });
+                    });
+                    
+                    const reader = new FileReader();
+                    reader.onloadend = () => { 
+                        selectedImagesBase64.push(reader.result); 
+                        renderPreviews(); 
+                    };
+                    reader.readAsDataURL(compressed);
+                } catch(e) {
+                    alert("خطأ في معالجة الصورة");
+                }
             }
         };
 
         function renderPreviews() {
-            document.getElementById('image-previews').innerHTML = selectedImagesBase64.map((img, i) => `<div class="preview-container"><img src="${img}"><div class="delete-preview" onclick="removePreview(${i})">X</div></div>`).join('');
+            document.getElementById('image-previews').innerHTML = selectedImagesBase64.map((img, i) => 
+                `<div class="preview-container"><img src="${img}" class="w-full h-full object-cover"><div class="delete-preview" onclick="removePreview(${i})">X</div></div>`
+            ).join('');
         }
+        
         window.removePreview = (i) => { selectedImagesBase64.splice(i, 1); renderPreviews(); };
 
         window.openAddCarMode = () => {
             if(!document.getElementById('car-user-select').value) return alert("اختار المستخدم");
-            window.editingCarId = null; selectedImagesBase64 = []; renderPreviews(); clearCarInputs();
+            window.editingCarId = null; 
+            selectedImagesBase64 = []; 
+            renderPreviews(); 
+            clearCarInputs();
             document.getElementById('car-form-box').classList.remove('hidden');
+            document.getElementById('delete-car-btn').classList.add('hidden');
         };
 
         window.closeCarForm = () => { document.getElementById('car-form-box').classList.add('hidden'); };
-        function clearCarInputs(){ ["car-name","car-type","car-model","car-chassis","car-container","car-lot","car-facade","car-arrival","car-shipping","car-notes"].forEach(id => document.getElementById(id).value = ""); }
+        
+        function clearCarInputs(){ 
+            ["car-name","car-type","car-model","car-chassis","car-container","car-lot","car-facade","car-arrival","car-shipping","car-notes"].forEach(id => document.getElementById(id).value = ""); 
+        }
 
-        window.saveCarWithPhotos = async function() {
+        window.saveCarWithPhotos = function() {
             const user = document.getElementById('car-user-select').value;
-            const payload = { carName: document.getElementById('car-name').value, type: document.getElementById('car-type').value, model: document.getElementById('car-model').value, chassis: document.getElementById('car-chassis').value, container: document.getElementById('car-container').value, lot: document.getElementById('car-lot').value, facade: document.getElementById('car-facade').value, arrival: document.getElementById('car-arrival').value, shipping: document.getElementById('car-shipping').value, notes: document.getElementById('car-notes').value, user, imageUrls: selectedImagesBase64, updatedAt: Date.now() };
-            if(window.editingCarId) await updateDoc(doc(db, "cars", window.editingCarId), payload);
-            else { payload.createdAt = Date.now(); await addDoc(collection(db, "cars"), payload); }
-            closeCarForm();
+            if(!user) return;
+
+            const payload = { 
+                carName: document.getElementById('car-name').value, 
+                type: document.getElementById('car-type').value, 
+                model: document.getElementById('car-model').value, 
+                chassis: document.getElementById('car-chassis').value, 
+                container: document.getElementById('car-container').value, 
+                lot: document.getElementById('car-lot').value, 
+                facade: document.getElementById('car-facade').value, 
+                arrival: document.getElementById('car-arrival').value, 
+                shipping: document.getElementById('car-shipping').value, 
+                notes: document.getElementById('car-notes').value, 
+                user, 
+                imageUrls: selectedImagesBase64, 
+                updatedAt: Date.now() 
+            };
+
+            let cars = getDB(DB_KEYS.CARS);
+
+            if(window.editingCarId) {
+                // تعديل
+                cars = cars.map(c => c.id === window.editingCarId ? { ...c, ...payload } : c);
+            } else {
+                // جديد
+                payload.id = Date.now().toString();
+                payload.createdAt = Date.now();
+                cars.push(payload);
+            }
+
+            try {
+                setDB(DB_KEYS.CARS, cars);
+                closeCarForm();
+                renderUserCarsGrid(user);
+            } catch (e) {
+                alert("ذاكرة المتصفح ممتلئة! حاول تقليل عدد الصور.");
+            }
         };
 
-        function loadInitialData() {
-            onSnapshot(collection(db, "users"), (snap) => {
-                const carS = document.getElementById('car-user-select'), accS = document.getElementById('acc-user-select');
-                carS.innerHTML = '<option value="">اختيار المستخدم</option>'; accS.innerHTML = '<option value="">اختر المستخدم</option>';
-                snap.forEach(d => { const u = d.data().name; carS.innerHTML += `<option value="${u}">${u}</option>`; accS.innerHTML += `<option value="${u}">${u}</option>`; });
-                accS.onchange = () => { if(accS.value) fetchAccountStatement(accS.value); };
-                carS.onchange = () => { renderUserCarsGrid(carS.value); };
-            });
-            onSnapshot(collection(db, "cars"), (snap) => {
-                window.allCars = []; snap.forEach(d => window.allCars.push({ id: d.id, ...d.data() }));
-                renderUserCarsGrid(document.getElementById('car-user-select').value);
-                renderList('cars');
-            });
-        }
-
-        function renderUserCarsGrid(user){
+        window.renderUserCarsGrid = function(user) {
             const grid = document.getElementById("user-cars-grid");
-            const cars = window.allCars.filter(c => c.user === user);
-            grid.innerHTML = cars.length ? cars.map(car => `<button onclick="openEditCar('${car.id}')" class="text-right glass-card rounded-2xl p-3 flex gap-3 items-center"><div class="w-16 h-16 rounded-xl border border-yellow-300 overflow-hidden"><img src="${car.imageUrls[0] || ''}" class="w-full h-full object-cover"></div><div class="flex-1"><div class="font-bold text-sky-900 text-sm">${car.carName || 'سيارة'}</div><div class="text-xs text-gray-500">${car.model || ''}</div></div></button>`).join('') : '<div class="text-gray-500 italic">لا توجد سيارات</div>';
-        }
+            if(!user) {
+                grid.innerHTML = '<div class="text-gray-500 italic">اختر مستخدم</div>';
+                return;
+            }
+            
+            const allCars = getDB(DB_KEYS.CARS);
+            const cars = allCars.filter(c => c.user === user);
+            
+            grid.innerHTML = cars.length ? cars.map(car => 
+                `<button onclick="openEditCar('${car.id}')" class="text-right glass-card rounded-2xl p-3 flex gap-3 items-center">
+                    <div class="w-16 h-16 rounded-xl border border-yellow-300 overflow-hidden bg-gray-100">
+                        <img src="${car.imageUrls[0] || ''}" class="w-full h-full object-cover" onerror="this.src='https://placehold.co/100?text=Car'">
+                    </div>
+                    <div class="flex-1">
+                        <div class="font-bold text-sky-900 text-sm">${car.carName || 'سيارة'}</div>
+                        <div class="text-xs text-gray-500">${car.model || car.type || ''}</div>
+                    </div>
+                </button>`
+            ).join('') : '<div class="text-gray-500 italic">لا توجد سيارات</div>';
+        };
 
         window.openEditCar = (id) => {
-            const car = window.allCars.find(c => c.id === id);
-            window.editingCarId = id; selectedImagesBase64 = [...(car.imageUrls || [])]; renderPreviews();
-            ["car-name","car-type","car-model","car-chassis","car-container","car-lot","car-facade","car-arrival","car-shipping","car-notes"].forEach(field => document.getElementById(field).value = car[field.replace('car-', '')] || car[field] || "");
+            const allCars = getDB(DB_KEYS.CARS);
+            const car = allCars.find(c => c.id === id);
+            if(!car) return;
+
+            window.editingCarId = id; 
+            selectedImagesBase64 = [...(car.imageUrls || [])]; 
+            renderPreviews();
+            
+            ["car-name","car-type","car-model","car-chassis","car-container","car-lot","car-facade","car-arrival","car-shipping","car-notes"].forEach(field => {
+                const key = field.replace('car-', '');
+                document.getElementById(field).value = car[key] || car[field] || "";
+            });
+            
             document.getElementById('car-form-box').classList.remove('hidden');
             document.getElementById('delete-car-btn').classList.remove('hidden');
         };
 
-        function renderList(tab) {
-            document.getElementById('list-container').innerHTML = window.allCars.map(item => `<div class="flex justify-between p-2 border-b"><span>${item.carName || item.type}</span></div>`).join('') || "لا توجد سجلات";
-        }
+        window.deleteCurrentCar = () => {
+            if(!window.editingCarId || !confirm("حذف هذه السيارة؟")) return;
+            
+            let cars = getDB(DB_KEYS.CARS);
+            cars = cars.filter(c => c.id !== window.editingCarId);
+            setDB(DB_KEYS.CARS, cars);
+            
+            closeCarForm();
+            renderUserCarsGrid(document.getElementById('car-user-select').value);
+        };
+
+        window.resetAllData = () => {
+            if(confirm("تحذير: هذا سيحذف جميع المستخدمين والسيارات والحسابات من هذا المتصفح. هل أنت متأكد؟")) {
+                localStorage.clear();
+                location.reload();
+            }
+        };
+
+        // التشغيل عند الفتح
+        loadInitialData();
     </script>
 </body>
 </html>
+
