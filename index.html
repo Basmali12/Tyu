@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
@@ -15,11 +14,15 @@
         body { font-family: 'Cairo', sans-serif; background: linear-gradient(135deg, #87CEEB 0%, #00BFFF 100%); min-height: 100vh; color: #1e3a8a; }
         .glass-card { background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px); border: 2px solid #FFD700; box-shadow: 0 10px 30px rgba(0,0,0,0.1); }
         .car-info-grid div { background: #f0f9ff; padding: 12px; border-radius: 12px; border-right: 4px solid #FFD700; border: 1px solid #bae6fd; }
-        .img-container { aspect-ratio: 1/1; overflow: hidden; border-radius: 15px; border: 2px solid #FFD700; }
-        .img-container img { width: 100%; height: 100%; object-fit: cover; cursor: pointer; }
+        .img-container { aspect-ratio: 1/1; overflow: hidden; border-radius: 15px; border: 2px solid #FFD700; background: #eee; }
+        .img-container img { width: 100%; height: 100%; object-fit: cover; cursor: pointer; transition: 0.3s; }
+        .img-container img:hover { transform: scale(1.1); }
         .gold-text { color: #B8860B; }
         .btn-gold { background: linear-gradient(to bottom, #FFD700, #DAA520); color: #1e3a8a; border: 1px solid #B8860B; }
-        input { background: #ffffff !important; border: 1px solid #87CEEB !important; color: #1e3a8a !important; pointer-events: auto !important; }
+        
+        /* تنسيق القائمة المنسدلة */
+        select { background: #ffffff !important; border: 2px solid #87CEEB !important; color: #1e3a8a !important; width: 100%; padding: 15px; border-radius: 15px; outline: none; font-weight: bold; cursor: pointer; }
+        
         .hidden-screen { display: none !important; }
         .logo-img { width: 160px; height: 160px; object-fit: contain; margin: 0 auto; display: block; filter: drop-shadow(0 4px 8px rgba(0,0,0,0.1)); }
         
@@ -28,21 +31,24 @@
         .account-table th { background: #1e3a8a; color: white; padding: 8px; border: 1px solid #FFD700; }
         .account-table td { padding: 8px; border: 1px solid #ddd; text-align: center; background: white; font-weight: bold; }
         .net-balance-box { background: #22c55e; color: white; padding: 10px; border-radius: 10px; text-align: center; margin-top: 5px; font-weight: bold; }
+        .empty-msg { text-align: center; color: #666; font-style: italic; padding: 20px; }
     </style>
 </head>
 <body class="flex items-center justify-center p-4">
 
-    <div id="user-login-screen" class="w-full max-w-md glass-card rounded-[2.5rem] p-8 text-center" data-tilt>
+    <div id="user-select-screen" class="w-full max-w-md glass-card rounded-[2.5rem] p-8 text-center" data-tilt>
         <div class="mb-6">
             <img src="https://f.top4top.io/p_36418598n1.png" alt="شركة احمد فوزي حسن" class="logo-img">
             <h1 class="text-2xl font-bold gold-text mt-4">شركة احمد فوزي حسن</h1>
-            <p class="text-sky-700 text-sm font-semibold italic">للتجارة العامة</p>
+            <p class="text-sky-700 text-sm font-semibold italic">بوابة العميل</p>
         </div>
         <div class="space-y-4">
-            <input type="text" id="user-username" class="w-full px-4 py-4 rounded-2xl text-right outline-none" placeholder="اسم المستخدم">
-            <input type="password" id="user-password" class="w-full px-4 py-4 rounded-2xl text-right outline-none" placeholder="كلمة المرور">
-            <button onclick="btnFlip(this); attemptUserLogin()" class="w-full btn-gold font-bold py-4 rounded-2xl shadow-lg mt-4 text-lg">دخول النظام</button>
-            <p id="user-login-error" class="text-red-600 text-sm hidden mt-2 font-bold">بيانات الدخول غير صحيحة!</p>
+            <label class="block text-right text-sky-800 font-bold mb-1">اختر اسم العميل للمتابعة:</label>
+            <select id="user-selector">
+                <option value="">جاري تحميل العملاء...</option>
+            </select>
+            <button onclick="btnFlip(this); enterDashboard()" class="w-full btn-gold font-bold py-4 rounded-2xl shadow-lg mt-4 text-lg">عرض كشف الحساب والسيارات</button>
+            <p id="login-error" class="text-red-500 text-sm hidden font-bold mt-2">يرجى اختيار اسم العميل أولاً</p>
         </div>
     </div>
 
@@ -52,14 +58,14 @@
                 <img src="https://f.top4top.io/p_36418598n1.png" class="w-16 h-16 object-contain">
                 <div>
                     <h1 class="text-md font-bold gold-text leading-tight">شركة احمد فوزي حسن</h1>
-                    <p class="text-[11px] text-sky-800 font-bold">العميل: <span id="display-user-name"></span></p>
+                    <p class="text-[11px] text-sky-800 font-bold">حساب العميل: <span id="display-user-name" class="text-red-600"></span></p>
                 </div>
             </div>
-            <button onclick="btnFlip(this); location.reload()" class="bg-white border border-red-200 text-red-600 p-3 rounded-xl shadow-sm"><i class="fas fa-sign-out-alt"></i></button>
+            <button onclick="btnFlip(this); logout()" class="bg-white border border-red-200 text-red-600 p-3 rounded-xl shadow-sm text-xs font-bold">تغيير العميل</button>
         </div>
 
         <div class="glass-card rounded-[2rem] p-5">
-            <h3 class="font-bold gold-text mb-3 text-center border-b pb-2"><i class="fas fa-file-invoice-dollar ml-2"></i>كشف حسابك المالي</h3>
+            <h3 class="font-bold gold-text mb-3 text-center border-b pb-2"><i class="fas fa-file-invoice-dollar ml-2"></i>كشف الحساب المالي</h3>
             <div class="overflow-x-auto">
                 <table class="account-table">
                     <thead>
@@ -74,121 +80,191 @@
                     <tbody id="user-statement-body"></tbody>
                 </table>
             </div>
-            <div id="user-net-balance" class="net-balance-box">جاري حساب الرصيد...</div>
+            <div id="user-net-balance" class="net-balance-box">الرصيد: 0</div>
         </div>
 
-        <h3 class="font-bold text-white text-center text-lg mt-4"><i class="fas fa-car ml-2"></i>سياراتك في الشركة</h3>
-        <div id="cars-container" class="grid grid-cols-2 md:grid-cols-3 gap-4"></div>
+        <h3 class="font-bold text-white text-center text-lg mt-4"><i class="fas fa-car ml-2"></i>السيارات المسجلة</h3>
+        <div id="cars-container" class="grid grid-cols-2 md:grid-cols-3 gap-4 pb-10"></div>
     </div>
 
     <div id="car-details-modal" class="fixed inset-0 bg-black/80 z-50 hidden flex items-center justify-center p-4">
         <div class="bg-white w-full max-w-2xl max-h-[90vh] overflow-y-auto rounded-[2.5rem] p-6 relative">
-            <button onclick="closeCarDetails()" class="absolute top-4 left-4 bg-red-600 text-white w-10 h-10 rounded-full z-10"><i class="fas fa-times"></i></button>
+            <button onclick="closeCarDetails()" class="absolute top-4 left-4 bg-red-600 text-white w-10 h-10 rounded-full z-10 flex items-center justify-center hover:bg-red-700"><i class="fas fa-times"></i></button>
             <div id="modal-content"></div>
         </div>
     </div>
 
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-app.js";
-        import { getFirestore, collection, getDocs, query, where, onSnapshot } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore.js";
-
-        const firebaseConfig = {
-            apiKey: "AIzaSyBYp2NDXCuWUUn6SkYZZUg5gdw7RV8Keps",
-            authDomain: "hbmar11111.firebaseapp.com",
-            projectId: "hbmar11111",
-            storageBucket: "hbmar11111.firebasestorage.app",
-            messagingSenderId: "3682727892",
-            appId: "1:3682727892:web:08a5f8de60a0a71cb3c841"
-        };
-        const app = initializeApp(firebaseConfig);
-        const db = getFirestore(app);
-
+    <script>
+        // --- إعدادات المكتبات ---
         VanillaTilt.init(document.querySelectorAll("[data-tilt]"), { max: 5, speed: 400 });
         window.btnFlip = (el) => gsap.to(el, { duration: 0.5, rotationY: 360, ease: "power2.out" });
 
-        window.attemptUserLogin = async function() {
-            const userIn = document.getElementById('user-username').value;
-            const passIn = document.getElementById('user-password').value;
-            const q = query(collection(db, "users"), where("name", "==", userIn), where("pass", "==", passIn));
-            const snap = await getDocs(q);
-            if (!snap.empty) proceed(userIn);
-            else document.getElementById('user-login-error').classList.remove('hidden');
+        // --- مفاتيح قاعدة البيانات المحلية (مطابقة للوحة المدير) ---
+        const DB_KEYS = {
+            USERS: 'afh_users',
+            ACCOUNTS: 'afh_accounts',
+            CARS: 'afh_cars'
         };
 
-        function proceed(name) {
-            document.getElementById('user-login-screen').classList.add('hidden-screen');
-            document.getElementById('user-dashboard').classList.remove('hidden-screen');
-            document.getElementById('display-user-name').innerText = name;
-            loadAccount(name);
-            loadCars(name);
+        function getDB(key) {
+            const data = localStorage.getItem(key);
+            return data ? JSON.parse(data) : [];
         }
 
-        // تحميل كشف الحساب (للعرض فقط)
-        function loadAccount(userName) {
-            const q = query(collection(db, "accounts"), where("user", "==", userName));
-            onSnapshot(q, (snap) => {
-                const tbody = document.getElementById('user-statement-body');
-                tbody.innerHTML = "";
-                let tFor = 0, tAgainst = 0, balance = 0;
-                let docs = [];
-                snap.forEach(d => docs.push(d.data()));
-                docs.sort((a,b) => a.timestamp - b.timestamp);
-                docs.forEach(item => {
-                    tFor += item.for; tAgainst += item.against; balance = tFor - tAgainst;
-                    tbody.innerHTML += `<tr><td>${item.date}</td><td>${item.desc}</td><td class="text-red-600">${item.against}</td><td class="text-green-600">${item.for}</td><td>${balance}</td></tr>`;
-                });
-                document.getElementById('user-net-balance').innerText = "الرصيد الإجمالي الحالي: " + balance.toLocaleString() + " د.ع";
+        // --- عند التحميل ---
+        window.onload = function() {
+            loadUsersIntoSelect();
+        };
+
+        function loadUsersIntoSelect() {
+            const users = getDB(DB_KEYS.USERS);
+            const select = document.getElementById('user-selector');
+            
+            if(users.length === 0) {
+                select.innerHTML = '<option value="">لا يوجد عملاء مسجلين (راجع المدير)</option>';
+                return;
+            }
+
+            select.innerHTML = '<option value="">-- اختر اسمك من القائمة --</option>';
+            users.forEach(u => {
+                select.innerHTML += `<option value="${u.name}">${u.name}</option>`;
             });
         }
 
-        // تحميل السيارات (كروت مختصرة)
-        async function loadCars(userName) {
+        // --- الدخول للوحة ---
+        window.enterDashboard = function() {
+            const selectedUser = document.getElementById('user-selector').value;
+            if(!selectedUser) {
+                document.getElementById('login-error').classList.remove('hidden');
+                return;
+            }
+
+            // عرض اللوحة
+            document.getElementById('user-select-screen').classList.add('hidden-screen');
+            document.getElementById('user-dashboard').classList.remove('hidden-screen');
+            document.getElementById('display-user-name').innerText = selectedUser;
+
+            // تحميل البيانات
+            loadUserAccount(selectedUser);
+            loadUserCars(selectedUser);
+        };
+
+        window.logout = function() {
+            location.reload();
+        };
+
+        // --- تحميل الحسابات ---
+        function loadUserAccount(userName) {
+            const allAccounts = getDB(DB_KEYS.ACCOUNTS);
+            // فلترة حسابات المستخدم الحالي وترتيبها
+            const userAccounts = allAccounts
+                .filter(a => a.user === userName)
+                .sort((a,b) => a.timestamp - b.timestamp);
+
+            const tbody = document.getElementById('user-statement-body');
+            tbody.innerHTML = "";
+
+            if(userAccounts.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="5" class="empty-msg">لا توجد حركات مالية مسجلة</td></tr>`;
+                document.getElementById('user-net-balance').innerText = "الرصيد النهائي: 0";
+                return;
+            }
+
+            let tFor = 0, tAgainst = 0, balance = 0;
+            
+            userAccounts.forEach(item => {
+                tFor += item.for; 
+                tAgainst += item.against; 
+                balance = tFor - tAgainst;
+                
+                tbody.innerHTML += `
+                    <tr>
+                        <td>${item.date}</td>
+                        <td>${item.desc}</td>
+                        <td class="text-red-600">${item.against}</td>
+                        <td class="text-green-600">${item.for}</td>
+                        <td style="direction: ltr">${balance}</td>
+                    </tr>`;
+            });
+
+            document.getElementById('user-net-balance').innerText = "الرصيد النهائي: " + balance.toLocaleString() + " د.ع";
+        }
+
+        // --- تحميل السيارات ---
+        function loadUserCars(userName) {
+            const allCars = getDB(DB_KEYS.CARS);
+            const userCars = allCars.filter(c => c.user === userName);
             const container = document.getElementById('cars-container');
             container.innerHTML = '';
-            const q = query(collection(db, "cars"), where("user", "==", userName));
-            const snap = await getDocs(q);
+
+            if(userCars.length === 0) {
+                container.innerHTML = '<p class="text-white text-center col-span-3">لا توجد سيارات مسجلة لهذا العميل</p>';
+                return;
+            }
             
-            snap.forEach(docSnap => {
-                const car = docSnap.data();
-                const carId = docSnap.id;
-                // اختيار صورة عشوائية للغلاف
-                const randomImg = car.imageUrls && car.imageUrls.length > 0 
-                    ? car.imageUrls[Math.floor(Math.random() * car.imageUrls.length)] 
+            userCars.forEach(car => {
+                // صورة الغلاف (الأولى أو عنصر نائب)
+                const coverImg = (car.imageUrls && car.imageUrls.length > 0) 
+                    ? car.imageUrls[0] 
                     : 'https://via.placeholder.com/150?text=No+Image';
 
                 const card = document.createElement('div');
                 card.className = 'glass-card p-3 rounded-3xl text-center cursor-pointer hover:scale-105 transition-transform';
                 card.innerHTML = `
-                    <div class="img-container mb-2"><img src="${randomImg}"></div>
-                    <div class="font-bold gold-text text-xs">${car.carName || car.type || 'سيارة'}</div>
-                    <div class="text-[10px] text-sky-700">${car.model || '---'}</div>
+                    <div class="img-container mb-2">
+                        <img src="${coverImg}">
+                    </div>
+                    <div class="font-bold gold-text text-sm">${car.carName || car.type || 'سيارة'}</div>
+                    <div class="text-[10px] text-sky-700 font-bold mt-1">${car.model || '---'}</div>
                 `;
-                card.onclick = () => showCarDetails(car);
+                
+                // عند الضغط، نمرر كائن السيارة بالكامل
+                card.onclick = function() { showCarDetails(car); };
                 container.appendChild(card);
             });
         }
 
-        // عرض تفاصيل السيارة المختارة في نافذة منبثقة
+        // --- نافذة تفاصيل السيارة ---
         window.showCarDetails = (car) => {
             const modal = document.getElementById('car-details-modal');
             const content = document.getElementById('modal-content');
             
-            let imagesHtml = car.imageUrls ? `<div class="grid grid-cols-3 gap-2 mt-6">${car.imageUrls.map(url => `<div class="img-container"><img src="${url}" onclick="window.open('${url}', '_blank')"></div>`).join('')}</div>` : '';
+            // تجهيز صور المعرض
+            let imagesHtml = '';
+            if (car.imageUrls && car.imageUrls.length > 0) {
+                imagesHtml = `<div class="mt-6"><h4 class="font-bold text-sky-900 mb-2">معرض الصور:</h4><div class="grid grid-cols-2 md:grid-cols-3 gap-2">`;
+                car.imageUrls.forEach(url => {
+                    imagesHtml += `<div class="img-container"><img src="${url}" onclick="openImageInNewTab('${url}')"></div>`;
+                });
+                imagesHtml += `</div></div>`;
+            } else {
+                imagesHtml = `<div class="mt-4 text-center text-gray-400">لا توجد صور لهذه السيارة</div>`;
+            }
             
             content.innerHTML = `
-                <h2 class="text-2xl font-bold gold-text mb-4 text-center">${car.carName || car.type}</h2>
-                <div class="grid grid-cols-2 gap-3 car-info-grid text-[11px]">
-                    <div><span class="text-sky-600 block">رقم الشاصي</span><b>${car.chassis || '---'}</b></div>
-                    <div><span class="text-sky-600 block">رقم الحاوية</span><b>${car.container || '---'}</b></div>
-                    <div><span class="text-sky-600 block">رقم اللوت</span><b>${car.lot || '---'}</b></div>
-                    <div><span class="text-sky-600 block">واجهة السيارة</span><b>${car.facade || '---'}</b></div>
-                    <div><span class="text-sky-600 block">تاريخ الوصول</span><b>${car.arrival || '---'}</b></div>
-                    <div><span class="text-sky-600 block">الموديل</span><b>${car.model || '---'}</b></div>
+                <h2 class="text-2xl font-bold gold-text mb-4 text-center border-b pb-2">${car.carName || car.type}</h2>
+                <div class="grid grid-cols-2 gap-3 car-info-grid text-[12px]">
+                    <div><span class="text-sky-600 block text-[10px]">رقم الشاصي</span><b class="select-all">${car.chassis || '---'}</b></div>
+                    <div><span class="text-sky-600 block text-[10px]">رقم الحاوية</span><b class="select-all">${car.container || '---'}</b></div>
+                    <div><span class="text-sky-600 block text-[10px]">رقم اللوت</span><b class="select-all">${car.lot || '---'}</b></div>
+                    <div><span class="text-sky-600 block text-[10px]">واجهة السيارة</span><b>${car.facade || '---'}</b></div>
+                    <div><span class="text-sky-600 block text-[10px]">تاريخ الوصول</span><b>${car.arrival || '---'}</b></div>
+                    <div><span class="text-sky-600 block text-[10px]">الموديل</span><b>${car.model || '---'}</b></div>
                 </div>
-                <div class="mt-4 p-3 bg-blue-50 rounded-xl"><p class="text-[10px] gold-text font-bold">تفاصيل الشحن:</p><p class="text-xs text-sky-900">${car.shipping || 'لا تتوفر تفاصيل'}</p></div>
+                <div class="mt-4 p-3 bg-blue-50 rounded-xl border border-blue-100">
+                    <p class="text-[10px] gold-text font-bold">تفاصيل الشحن / ملاحظات:</p>
+                    <p class="text-xs text-sky-900 mt-1">${car.shipping || car.notes || 'لا توجد ملاحظات إضافية'}</p>
+                </div>
                 ${imagesHtml}
-                <button onclick='downloadImages(${JSON.stringify(car.imageUrls)}, "${car.carName}")' class="w-full btn-gold font-bold py-3 rounded-2xl mt-6 shadow-md"><i class="fas fa-download ml-2"></i>تحميل جميع الصور</button>
+                <button id="download-btn" class="w-full btn-gold font-bold py-3 rounded-2xl mt-6 shadow-md flex items-center justify-center gap-2">
+                    <i class="fas fa-download"></i> تحميل جميع الصور
+                </button>
             `;
+
+            // ربط زر التحميل
+            const dlBtn = content.querySelector('#download-btn');
+            dlBtn.onclick = function() { downloadImages(car.imageUrls, car.carName); };
+
             modal.classList.remove('hidden');
         };
 
@@ -196,19 +272,31 @@
             document.getElementById('car-details-modal').classList.add('hidden');
         };
 
-        // وظيفة تحميل جميع الصور
+        window.openImageInNewTab = (base64) => {
+            const win = window.open();
+            win.document.write(`<img src="${base64}" style="width:100%">`);
+        };
+
+        // --- وظيفة تحميل الصور ---
         window.downloadImages = (urls, name) => {
             if(!urls || urls.length === 0) return alert("لا توجد صور للتحميل");
+            
+            // بما أن الصور Base64، نقوم بإنشاء روابط مؤقتة
+            let count = 0;
             urls.forEach((url, index) => {
-                const link = document.createElement('a');
-                link.href = url;
-                link.download = `${name || 'car'}_image_${index + 1}.jpg`;
-                document.body.appendChild(link);
-                link.click();
-                document.body.removeChild(link);
+                setTimeout(() => {
+                    const link = document.createElement('a');
+                    link.href = url;
+                    link.download = `${name || 'car'}_${index + 1}.jpg`;
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
+                }, index * 500); // فاصل زمني بسيط لتجنب حظر المتصفح للتحميلات المتعددة
+                count++;
             });
-            alert("بدأ تحميل الصور...");
+            alert(`جاري تحميل ${count} صورة... يرجى السماح بالتحميلات المتعددة إذا طلب المتصفح ذلك.`);
         };
     </script>
 </body>
 </html>
+
